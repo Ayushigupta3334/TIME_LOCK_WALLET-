@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Signup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: url('https://source.unsplash.com/1600x900/?technology,blockchain') no-repeat center center/cover;
+            color: white;
+            padding: 50px;
+            background: url('https://cdn.labmanager.com/assets/articleNo/28009/aImg/50744/managing-time-l.jpg');
+        }
+        .container {
+            background: #34495e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            max-width: 400px;
+            margin: auto;
+        }
+        input, button {
+            width: 90%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+        }
+        button {
+            background-color: #1abc9c;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #16a085;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="login">
+        <h2>Login</h2>
+        <input type="text" placeholder="Username" id="loginUser">
+        <input type="password" placeholder="Password" id="loginPass">
+        <button onclick="login()">Login</button>
+        <p>Don't have an account? <a href="#" onclick="showSignup()">Sign Up</a></p>
+    </div>
+
+    <div class="container" id="signup" style="display:none;">
+        <h2>Sign Up</h2>
+        <input type="text" placeholder="Username" id="signupUser">
+        <input type="password" placeholder="Password" id="signupPass">
+        <button onclick="signup()">Sign Up</button>
+        <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+    </div>
+
+    <script>
+        function showSignup() {
+            document.getElementById("login").style.display = "none";
+            document.getElementById("signup").style.display = "block";
+        }
+        function showLogin() {
+            document.getElementById("signup").style.display = "none";
+            document.getElementById("login").style.display = "block";
+        }
+        function login() {
+            alert("Login Functionality To Be Implemented");
+        }
+        function signup() {
+            alert("Signup Functionality To Be Implemented");
+        }
+    </script>
+</body>
+</html>

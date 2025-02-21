@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time-Locked Wallet</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <a href="login.html"></a>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background: url('https://source.unsplash.com/1600x900/?technology,blockchain') no-repeat center center/cover;
+            color: white;
+            animation: fadeIn 1.5s;
+            background: url('https://files.oaiusercontent.com/file-2MEEWQ4d8SbfLEosY5VxgC?se=2025-02-21T12%3A40%3A21Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D332dc82b-6c2c-4e5a-b1c8-163bf9a4cf9d.webp&sig=VZxYpNSJvOAO9cb2tXTGqO4h3swRr5Tk4fwZ3Utcthw%3D') no-repeat center center/cover;
+        }
+        .container {
+            background: #34495e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            max-width: 400px;
+            margin: auto;
+            transition: transform 0.3s;
+        }
+        .container:hover {
+            transform: scale(1.02);
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            cursor: pointer;
+            background-color: #1abc9c;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #16a085;
+        }
+        input {
+            width: 90%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+        }
+        img {
+            width: 100px;
+            margin-bottom: 10px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        yle>
+        .navbar {
+            background: #2c3e50;
+            padding: 15px;
+            text-align: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .navbar a {
+            color: black;
+            text-decoration: none;
+            padding: 14px 20px;
+            display: inline-block;
+        }
+        .navbar a:hover {
+            background: beige;
+        }
+    </style>
+
+    
+  
+</head>
+<body>
+  <div class="navbar">
+    <a href="login.html">Login</a>
+    <a href="signup.html">Sign Up</a>
+</div>
+    <div class="container">
+        <img src="https://cdn-icons-png.flaticon.com/512/7475/7475978.png" alt="Wallet Icon">
+        <h2>Time-Locked Wallet</h2>
+        <p><strong>Wallet Address:</strong> <span id="walletAddress">Not Connected</span></p>
+        <p><strong>Balance:</strong> <span id="balance">0</span> ETH</p>
+        <p><strong>Unlock Time:</strong> <span id="unlockTime">Loading...</span></p>
+        <p><strong>Max Withdrawable:</strong> <span id="maxWithdraw">0</span> ETH</p>
+        <p><strong>Refill Needed:</strong> <span id="refillAmount">0</span> ETH</p>
+        <input type="datetime-local" id="unlockDate">
+        <input type="number" id="depositAmount" placeholder="Enter deposit amount in ETH">
+        <button onclick="depositFunds()">Deposit</button>
+        <input type="number" id="withdrawAmount" placeholder="Enter withdraw amount in ETH">
+        <button onclick="withdrawFunds()">Withdraw</button>
+        <button onclick="connectWallet()">Connect Wallet</button>
+    </div>
+
+    <script>
+        const contractAddress = "0x0c8b4Ba1518A2873D8404224021D90fCf819C4Fa";
+        const abi = [
+            "function deposit(uint256 unlockTime) public payable",
+            "function withdraw(uint256 amount) public",
+            "function getBalance() public view returns (uint256)",
+            "function unlockTime() public view returns (uint256)"
+        ];
+
+        let provider, signer, contract;
+
+        async function connectWallet() {
+            if (window.ethereum) {
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                signer = provider.getSigner();
+                contract = new ethers.Contract(contractAddress, abi, signer);
+                document.getElementById("walletAddress").innerText = await signer.getAddress();
+                fetchData();
+            } else {
+                alert("Please install MetaMask to use this DApp");
+            }
+        }
+
+        async function fetchData() {
+            const balance = await contract.getBalance();
+            const unlockTime = await contract.unlockTime();
+            document.getElementById("balance").innerText = ethers.utils.formatEther(balance);
+            document.getElementById("unlockTime").innerText = new Date(unlockTime * 1000).toLocaleString();
+            updateWithdrawable(balance);
+        }
+
+        function updateWithdrawable(balance) {
+            const maxWithdraw = balance / 2; 
+            document.getElementById("maxWithdraw").innerText = ethers.utils.formatEther(maxWithdraw);
+            const refillAmount = maxWithdraw * 0.5; 
+            document.getElementById("refillAmount").innerText = ethers.utils.formatEther(refillAmount);
+        }
+
+        async function depositFunds() {
+            try {
+                const amount = document.getElementById("depositAmount").value;
+                const unlockDate = new Date(document.getElementById("unlockDate").value).getTime() / 1000;
+                if (!amount || !unlockDate) return alert("Enter amount and unlock date!");
+                const tx = await contract.deposit(unlockDate, { value: ethers.utils.parseEther(amount) });
+                console.log("Transaction sent:", tx);
+                await tx.wait();
+                console.log("Transaction confirmed!");
+                fetchData();
+            } catch (error) {
+                console.error("Deposit Error:", error);
+                alert(error.message);
+            }
+        }
+
+        async function withdrawFunds() {
+            try {
+                const amount = document.getElementById("withdrawAmount").value;
+                if (!amount) return alert("Enter an amount to withdraw!");
+                const tx = await contract.withdraw(ethers.utils.parseEther(amount));
+                console.log("Transaction sent:", tx);
+                await tx.wait();
+                console.log("Withdraw successful!");
+                fetchData();
+            } catch (error) {
+                console.error("Withdraw Error:", error);
+                alert(error.message);
+            }
+        }
+    </script>
+</body>
+</html>
